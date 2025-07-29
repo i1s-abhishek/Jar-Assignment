@@ -1,14 +1,22 @@
 package com.abhishek.jaronboarding.presentation.ui.components
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.EaseInOutCubic
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandIn
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.with
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -34,6 +42,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
@@ -52,7 +61,8 @@ fun OnboardingFeatureCard(
     onExpandChange: (Int) -> Unit,
     index: Int,
     expandedIndex: Int,
-    backgroundBrush: Brush
+    backgroundBrush: Brush,
+    isVisible: Boolean
 ) {
     val expanded = index == expandedIndex
 
@@ -62,36 +72,62 @@ fun OnboardingFeatureCard(
             Color(educationData.strokeEndColor.toColorInt())
         )
     )
+    AnimatedVisibility(
+        visible = isVisible,
+        enter = slideInVertically(
+            initialOffsetY = { height -> height + 1000 },
+            animationSpec = tween(
+                durationMillis = 500,
+                easing = EaseInOutCubic
+            )
+        ) + fadeIn(
+            animationSpec = tween(500)
+        )
+    ) {
+        SharedTransitionLayout {
+            AnimatedContent(
+                expanded,
+                label = "OnboardingFeatureCard",
+                transitionSpec = {
+                    expandIn(
+                        animationSpec = tween(300, easing = EaseInOutCubic),
+                        expandFrom = Alignment.Center,
+                        initialSize = { IntSize(it.width, it.height) }
+                    ) + fadeIn(
+                        animationSpec = tween(300)
+                    ) with shrinkOut(
+                        animationSpec = tween(300, easing = EaseInOutCubic),
+                        shrinkTowards = Alignment.Center,
+                        targetSize = { IntSize(it.width, it.height) }
+                    ) + fadeOut(
+                        animationSpec = tween(300)
+                    )
+                }
+            ) { targetState ->
+                if (targetState) {
+                    ExpendedCard(
+                        modifier,
+                        stroke,
+                        backgroundBrush,
+                        educationData,
+                        animatedVisibilityScope = this@AnimatedContent,
+                        sharedTransitionScope = this@SharedTransitionLayout
+                    )
 
-    SharedTransitionLayout {
-        AnimatedContent(
-            expanded,
-            label = "OnboardingFeatureCard"
-        ) { targetState ->
-            if (targetState) {
-                ExpendedCard(
-                    modifier,
-                    stroke,
-                    backgroundBrush,
-                    educationData,
-                    animatedVisibilityScope = this@AnimatedContent,
-                    sharedTransitionScope = this@SharedTransitionLayout
-                )
-
-            } else {
-                UnExpendedCard(
-                    modifier,
-                    backgroundBrush,
-                    onExpandChange,
-                    index,
-                    educationData,
-                    animatedVisibilityScope = this@AnimatedContent,
-                    sharedTransitionScope = this@SharedTransitionLayout
-                )
+                } else {
+                    UnExpendedCard(
+                        modifier,
+                        backgroundBrush,
+                        onExpandChange,
+                        index,
+                        educationData,
+                        animatedVisibilityScope = this@AnimatedContent,
+                        sharedTransitionScope = this@SharedTransitionLayout
+                    )
+                }
             }
         }
     }
-
 }
 
 @Composable
@@ -229,6 +265,7 @@ fun ShowOnboardingFeatureCard() {
         expandedIndex = 2,
         backgroundBrush = Brush.verticalGradient(
             colors = listOf(Color(0xFF272239), Color(0xFF272239))
-        )
+        ),
+        isVisible = true
     )
 }

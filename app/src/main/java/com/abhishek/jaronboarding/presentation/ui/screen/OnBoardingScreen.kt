@@ -49,6 +49,7 @@ fun OnBoardingScreen(
 ) {
 
     val uiState by viewModel.uiState.collectAsState()
+    val visibleCards by viewModel.visibleCards.collectAsState()
     val expandedIndex by viewModel.expandedIndex.collectAsState()
 
     val successState = uiState as? OnBoardingUiState.Success
@@ -105,7 +106,8 @@ fun OnBoardingScreen(
                         onBoardingData = data,
                         onExpandedCardChange = viewModel::onExpandCard,
                         expandedIndex = expandedIndex,
-                        backgroundBrush = carBackgroundBrush
+                        backgroundBrush = carBackgroundBrush,
+                        visibleCards = visibleCards
                     )
                 }
 
@@ -123,7 +125,8 @@ private fun OnBoardingContent(
     onBoardingData: OnBoardingResponse.Data?,
     onExpandedCardChange: (Int) -> Unit,
     expandedIndex: Int,
-    backgroundBrush: Brush
+    backgroundBrush: Brush,
+    visibleCards: Set<Int>
 ) {
     val cards = onBoardingData?.manualBuyEducationData?.educationCardList ?: return
     Column(
@@ -136,6 +139,7 @@ private fun OnBoardingContent(
             OnboardingFeatureCard(
                 educationData = card,
                 index = index,
+                isVisible = index in visibleCards,
                 expandedIndex = expandedIndex,
                 onExpandChange = { isExpanded ->
                     onExpandedCardChange(isExpanded)

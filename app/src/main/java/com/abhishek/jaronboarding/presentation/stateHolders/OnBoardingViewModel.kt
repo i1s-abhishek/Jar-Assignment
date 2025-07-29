@@ -26,6 +26,9 @@ class OnBoardingViewModel @Inject constructor(
 
     private lateinit var cardAnimationConfig: CardAnimationConfig
 
+    private val _visibleCards = MutableStateFlow<Set<Int>>(emptySet())
+    val visibleCards: StateFlow<Set<Int>> = _visibleCards
+
     init {
         fetchOnBoardingData()
     }
@@ -67,8 +70,19 @@ class OnBoardingViewModel @Inject constructor(
         viewModelScope.launch {
             delay(cardAnimationConfig.introInterval)
             for (i in 0 until totalCards) {
+                // Show card and expand immediately
+                _visibleCards.value = _visibleCards.value + i
                 _expandedIndex.value = i
+
+                // Keep expanded for duration
                 delay(cardAnimationConfig.expandStayInterval)
+
+                // Only collapse if it's not the last card
+                if (i < totalCards - 1) {
+                    _expandedIndex.value = -1
+                    delay(300) // Wait for collapse animation
+                    delay(500) // Wait before showing next card
+                }
             }
         }
     }
